@@ -8,6 +8,7 @@ import 'package:redit_clone/core/common/loader.dart';
 import 'package:redit_clone/core/constants/constants.dart';
 import 'package:redit_clone/core/utils.dart';
 import 'package:redit_clone/features/community/controller/community_controller.dart';
+import 'package:redit_clone/models/community_model.dart';
 import 'package:redit_clone/theme/pallete.dart';
 
 class EditCommunityScreen extends ConsumerStatefulWidget {
@@ -28,22 +29,32 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
     final res = await pickImage();
     if (res != null) {
       setState(() {
-       bannerFile = File(res.files.first.path!);
-      });
-    }
-  }
-File? profileFile;
-    void selectProfileImage() async {
-    final res = await pickImage();
-    if (res != null) {
-      setState(() {
-       profileFile = File(res.files.first.path!);
+        bannerFile = File(res.files.first.path!);
       });
     }
   }
 
+  File? profileFile;
+  void selectProfileImage() async {
+    final res = await pickImage();
+    if (res != null) {
+      setState(() {
+        profileFile = File(res.files.first.path!);
+      });
+    }
+  }
+
+  void save(CommunityModel communityModel) {
+    ref.read(communityControllerProvider.notifier).editCommunity(
+        profileFile: profileFile,
+        bannerFile: bannerFile,
+        context: context,
+        communityModel: communityModel);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(communityControllerProvider);
     return ref.watch(getCommunityByNameProvider(widget.name)).when(
         data: (community) => Scaffold(
               backgroundColor: Pallete.darkModeAppTheme.backgroundColor,
@@ -51,10 +62,12 @@ File? profileFile;
                 title: const Text("Edit Community"),
                 centerTitle: false,
                 actions: [
-                  TextButton(onPressed: () {}, child: const Text('Save'))
+                  TextButton(
+                      onPressed: () => save(community),
+                      child: const Text('Save'))
                 ],
               ),
-              body: Padding(
+              body:isLoading?const Loader(): Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: SizedBox(
                   height: 200,
@@ -66,21 +79,30 @@ File? profileFile;
                         radius: const Radius.circular(10),
                         dashPattern: const [10, 4],
                         strokeCap: StrokeCap.round,
-                        color:
-                            Pallete.darkModeAppTheme.textTheme.bodyMedium!.color!,
+                        color: Pallete
+                            .darkModeAppTheme.textTheme.bodyMedium!.color!,
                         child: Container(
                             width: double.infinity,
                             height: 150,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: bannerFile!=null ?Image.file(bannerFile!, fit: BoxFit.cover,):community.banner.isEmpty ||
-                                    community.banner == Constants.bannerDefault
-                                ? const Center(
-                                    child:
-                                        Icon(Icons.camera_alt_outlined, size: 40),
+                            child: bannerFile != null
+                                ? Image.file(
+                                    bannerFile!,
+                                    fit: BoxFit.cover,
                                   )
-                                : Image.network(community.banner, fit: BoxFit.cover,)),
+                                : community.banner.isEmpty ||
+                                        community.banner ==
+                                            Constants.bannerDefault
+                                    ? const Center(
+                                        child: Icon(Icons.camera_alt_outlined,
+                                            size: 40),
+                                      )
+                                    : Image.network(
+                                        community.banner,
+                                        fit: BoxFit.cover,
+                                      )),
                       ),
                     ),
                     Positioned(
@@ -88,15 +110,19 @@ File? profileFile;
                       left: 20,
                       child: GestureDetector(
                         onTap: selectProfileImage,
-                        child:profileFile!=null?
-                         CircleAvatar(
-                          radius: 32,
-                          backgroundImage:FileImage(profileFile!,),
-                        ):
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundImage:NetworkImage(community.avatar,),
-                        ),
+                        child: profileFile != null
+                            ? CircleAvatar(
+                                radius: 32,
+                                backgroundImage: FileImage(
+                                  profileFile!,
+                                ),
+                              )
+                            : CircleAvatar(
+                                radius: 32,
+                                backgroundImage: NetworkImage(
+                                  community.avatar,
+                                ),
+                              ),
                       ),
                     )
                   ]),

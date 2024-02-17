@@ -6,6 +6,8 @@ import 'package:redit_clone/features/auth/controller/auth_controller.dart';
 import 'package:redit_clone/features/community/controller/community_controller.dart';
 import 'package:routemaster/routemaster.dart';
 
+import '../../../models/community_model.dart';
+
 class CommunityScreen extends ConsumerWidget {
   final String name;
   const CommunityScreen({
@@ -15,6 +17,13 @@ class CommunityScreen extends ConsumerWidget {
 
   void navigateToModTools(BuildContext context) {
     Routemaster.of(context).push('/mod-tools/$name');
+  }
+
+  void joinCommunity(
+      WidgetRef ref, CommunityModel communityModel, BuildContext context) {
+    ref
+        .read(communityControllerProvider.notifier)
+        .joinCommunity(communityModel, context);
   }
 
   @override
@@ -65,7 +74,8 @@ class CommunityScreen extends ConsumerWidget {
                               ),
                               community.mods.contains(user.uid)
                                   ? OutlinedButton(
-                                      onPressed:()=> navigateToModTools(context),
+                                      onPressed: () =>
+                                          navigateToModTools(context),
                                       style: ElevatedButton.styleFrom(
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
@@ -75,7 +85,7 @@ class CommunityScreen extends ConsumerWidget {
                                               horizontal: 25)),
                                       child: const Text('Mod Tools'))
                                   : OutlinedButton(
-                                      onPressed: () {},
+                                      onPressed: () =>joinCommunity(ref, community,context),
                                       style: ElevatedButton.styleFrom(
                                           shape: RoundedRectangleBorder(
                                             borderRadius:

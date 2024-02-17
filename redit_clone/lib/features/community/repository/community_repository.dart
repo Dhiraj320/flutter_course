@@ -70,4 +70,72 @@ class CommunityRepository {
     return _communities.doc(name).snapshots().map((event) =>
         CommunityModel.fromMap(event.data() as Map<String, dynamic>));
   }
+
+  // function for store in firebaseStorage
+  FutureVoid editCommunity(CommunityModel communityModel) async {
+    try {
+      return right(
+          _communities.doc(communityModel.name).update(communityModel.toMap()));
+    } on FirebaseException catch (e) {
+      //throwing error for we use both way
+      // return left(Failure(e.message!));
+      //or
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+      //or
+      // throw e.toString();
+    }
+  }
+
+  //search suggestion function
+  Stream<List<CommunityModel>> searchCommunity(String query) {
+    return _communities
+        .where(
+          'name',
+          isGreaterThanOrEqualTo: query.isEmpty ? 0 : query,
+          isLessThan: query.isEmpty
+              ? null
+              : query.substring(0, query.length - 1) +
+                  String.fromCharCode(query.codeUnitAt(query.length - 1) + 1),
+        )
+        .snapshots()
+        .map((event) {
+      List<CommunityModel> communities = [];
+      for (var community in event.docs) {
+        communities.add(
+            CommunityModel.fromMap(community.data() as Map<String, dynamic>));
+      }
+      return communities;
+    });
+  }
+
+  //joining  community Function,
+
+  FutureVoid joinCommunity(String communityName, String userId) async {
+    try {
+      return right(_communities.doc(communityName).update({
+        'members': FieldValue.arrayUnion([userId]),//FieldValue is used for update the array by adding this userId
+      }));
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
+  }
+
+  //leaving community Function,
+
+
+    FutureVoid leaveCommunity(String communityName, String userId) async {
+    try {
+      return right(_communities.doc(communityName).update({
+        'members': FieldValue.arrayRemove([userId]),//FieldValue is used for update the array by adding this userId
+      }));
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
+  }
 }
