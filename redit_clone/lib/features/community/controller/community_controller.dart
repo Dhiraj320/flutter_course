@@ -126,7 +126,7 @@ class CommunityController extends StateNotifier<bool> {
     return _communityRepository.searchCommunity(query);
   }
 
-  //joining  community Function,
+  //joining  community Function,and leaving community Function,
   void joinCommunity(
       CommunityModel communityModel, BuildContext context) async {
     final user = _ref.read(userProvider)!;
@@ -141,16 +141,16 @@ class CommunityController extends StateNotifier<bool> {
     }
     res.fold((l) => showSnackBar(context, l.message), (r) {
       if (communityModel.members.contains(user.uid)) {
-        showSnackBar(
-          context,'Community left successfully'
-        );
-      }else{
-        showSnackBar(
-          context,'Community joined successfully'
-        );
+        showSnackBar(context, 'Community left successfully');
+      } else {
+        showSnackBar(context, 'Community joined successfully');
       }
     });
   }
 
-  //leaving community Function,
+  //saving the moderator
+  void addMods(String communityName, List<String> uids, BuildContext context)async {
+   final res = await _communityRepository.addMods(communityName, uids);
+   res.fold((l) => showSnackBar(context, l.message), (r) =>Routemaster.of(context).pop() );
+  }
 }
